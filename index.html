@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f5f0" />
+  <meta name="application-version" content="3.0.14" />
+  <title>数独求败</title>
+  <link rel="stylesheet" href="styles.css?v=3.0.14" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <button class="brand-mark" id="brandProfileButton" aria-label="打开玩家档案" title="玩家档案"><i class="diamond-top"><span data-logo-part="0">数</span></i><i class="diamond-left"><span data-logo-part="1">求</span></i><i class="diamond-right"><span data-logo-part="2">败</span></i><i class="diamond-bottom"><span data-logo-part="3">独</span></i></button>
+        <div class="brand-player"><h1 id="headerPlayerName">数独新手</h1></div>
+      </div>
+      <div class="top-actions">
+        <button class="profile-button" id="profileButton" aria-label="打开玩家档案"><span id="profileAvatar">◈</span><b id="profileScore">0</b></button>
+        <button class="lang-button" id="langButton" type="button" aria-label="切换语言">中 / EN</button>
+        <button class="icon-button" id="themeButton" aria-label="切换明暗主题" title="切换明暗主题">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42M7.06 16.94l-1.42 1.42M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+        </button>
+      </div>
+    </header>
+    <button class="sound-unlock" id="soundUnlock" type="button">开启音效</button>
+
+    <section class="game-card" aria-label="数独游戏">
+      <div class="game-head">
+        <div class="difficulty" role="group" aria-label="选择难度">
+          <button data-level="novice" class="active" data-i18n-level="novice">初级</button>
+          <button data-level="intermediate" data-i18n-level="intermediate">中级</button>
+          <button data-level="advanced" data-i18n-level="advanced">高级</button>
+          <button data-level="king" data-i18n-level="king">王者</button>
+          <button data-level="legend" data-i18n-level="legend">求败</button>
+        </div>
+        <div class="stats">
+          <span><small data-i18n="errors">错误</small><b id="mistakes">0/3</b></span>
+          <span class="divider"></span>
+          <span><small data-i18n="time">时间</small><b id="timer">00:00</b></span>
+        </div>
+      </div>
+      <div id="techniqueRoute" class="technique-route" hidden><span data-i18n="focusTechniques">本局重点技巧</span><p id="techniqueRouteText"></p></div>
+      <div id="challengeNotice" class="challenge-notice" hidden></div>
+      <div class="mind-journey" aria-live="polite"><div><span id="journeyText">慢慢来，每一步都算数</span><b id="comboText">连对 0</b></div><i><b id="journeyBar"></b></i><button id="soundToggle" type="button" aria-label="切换奖励音乐" title="切换奖励音乐">♪</button></div>
+
+      <div id="board" class="board" role="grid" aria-label="9乘9数独棋盘"></div>
+
+      <div class="number-pad" aria-label="数字键盘">
+        <button data-number="1">1<small></small></button><button data-number="2">2<small></small></button>
+        <button data-number="3">3<small></small></button><button data-number="4">4<small></small></button>
+        <button data-number="5">5<small></small></button><button data-number="6">6<small></small></button>
+        <button data-number="7">7<small></small></button><button data-number="8">8<small></small></button>
+        <button data-number="9">9<small></small></button>
+      </div>
+
+      <aside id="learningHint" class="learning-hint" hidden aria-live="polite">
+        <div class="hint-symbol">思</div>
+        <div class="hint-body">
+          <strong id="hintTitle"></strong>
+          <p id="hintReason"></p>
+          <div id="coachPanel" class="coach-panel" hidden>
+            <div id="coachQuick" class="coach-quick" aria-label="追问教练">
+              <button type="button" data-coach-question="why" data-i18n="coachWhy">为什么？</button>
+              <button type="button" data-coach-question="disagree" data-i18n="coachDisagree">我觉得不对</button>
+              <button type="button" data-coach-question="simpler" data-i18n="coachSimpler">有没有更简单的突破口？</button>
+              <button type="button" data-coach-question="next" data-i18n="coachNext">下一步看哪里？</button>
+            </div>
+            <div id="coachLog" class="coach-log" aria-live="polite"></div>
+            <form id="coachForm" class="coach-form">
+              <input id="coachInput" maxlength="80" placeholder="和“思”聊一句，例如：我没看懂这个技巧" aria-label="追问思考教练" data-i18n-placeholder="coachPlaceholder">
+              <button type="submit" data-i18n="ask">问</button>
+            </form>
+            <small data-i18n="localCoach">本地教练：先用当前棋盘规则解释，不联网。</small>
+          </div>
+        </div>
+      </aside>
+
+      <div class="actions">
+        <button id="eraseButton" class="secondary">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 8.5-9a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3L13 20H8l-4-3a1.4 1.4 0 0 1 0-2Z"/><path d="m10 19-5-5m8 6h7"/></svg><span data-i18n="erase">擦除</span>
+        </button>
+        <button id="notesButton" class="secondary" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.5 8 3 3"/></svg><span data-i18n="notes">标记</span>
+        </button>
+        <button id="autoNotesButton" class="secondary" title="为所有空格一次性填写合法候选数" data-i18n="autoNotes">一键标记</button>
+        <button id="hintButton" class="secondary">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6m-5 3h4m4-10a6 6 0 1 0-9.5 4.9c.9.65 1.5 1.35 1.5 2.1h4c0-.75.6-1.45 1.5-2.1A5.98 5.98 0 0 0 18 11Z"/></svg><span data-i18n="hint">提示</span> <span id="hintCount">3</span>
+        </button>
+        <button id="newButton" class="primary" data-i18n="newGame">新游戏</button>
+      </div>
+    </section>
+    <p class="keyboard-tip" data-i18n="keyboardTip">提示：电脑端可使用数字键与方向键操作</p>
+  </main>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="celebration">✦</div>
+      <h2 id="modalTitle" data-i18n="completeTitle">漂亮，完成了！</h2>
+      <p><span data-i18n="completePrefix">你完成了这局</span><span id="resultLevel">初级</span><span data-i18n="completeSuffix">数独</span></p>
+      <div class="result result-three"><span><small data-i18n="usedTime">用时</small><b id="resultTime">00:00</b></span><span><small data-i18n="errors">错误</small><b id="resultMistakes">0</b></span><span><small data-i18n="score">本局得分</small><b id="resultScore">0</b></span></div>
+      <div id="playerComparison" class="player-comparison" aria-live="polite"></div>
+      <div id="resultAwards" class="result-awards" hidden></div>
+      <button id="againButton" class="primary" data-i18n="again">再来一局</button>
+      <button id="closeModal" class="text-button" data-i18n="viewBoard">查看棋盘</button>
+    </div>
+  </div>
+  <div id="profileModal" class="modal" hidden>
+    <div class="modal-card profile-card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+      <button id="closeProfile" class="modal-close" aria-label="关闭">×</button>
+      <div id="profileEmblem" class="profile-emblem">◈</div><div class="inline-name"><h2 id="profileTitle" role="button" tabindex="0" title="点击修改昵称">数独新手</h2><input id="playerName" maxlength="12" value="数独新手" aria-label="玩家昵称" hidden></div>
+      <div class="avatar-section compact-avatar"><span data-i18n="avatarSection">个人图案</span><div class="avatar-tools"><div id="avatarPicker" class="avatar-picker" role="group" aria-label="选择个人图案"></div><button id="randomAvatar" type="button" data-i18n="randomAvatar">随机</button><label class="photo-avatar"><span data-i18n="photoAvatar">照片</span><input id="avatarPhoto" type="file" accept="image/*" capture="environment"></label></div><div class="avatar-designer"><input id="customAvatarText" maxlength="2" placeholder="1～2字" aria-label="自定义头像文字"><input id="customAvatarColor" type="color" value="#6f8062" aria-label="头像颜色"><button id="saveCustomAvatar" type="button" data-i18n="applyAvatar">应用设计</button></div><small data-i18n="photoLocalNote">照片仅压缩保存在本机，不会上传。</small></div>
+      <div class="profile-summary"><span><b id="profileLevel">Lv.1</b><small data-i18n="currentRank">当前等级</small></span><span><b id="profilePoints">0</b><small data-i18n="wisdomPoints">智慧点</small></span><span><b id="badgeCount">0/5</b><small data-i18n="badges">技巧勋章</small></span></div>
+      <div class="level-progress"><div><span id="levelProgressText">距离 Lv.2</span><small id="levelProgressValue">0/100</small></div><i><b id="levelProgressBar"></b></i></div>
+      <h3 data-i18n="records">个人纪录</h3><div id="recordSummary" class="record-summary"></div><div id="recordsGrid" class="records-grid"></div>
+      <section class="score-rules"><strong data-i18n="scoreRules">当前积分规则</strong><p id="scoreRuleText"></p><small id="rankTrialText"></small><small data-i18n="rankRuleNote">等级随积分动态升降；未达标时可试玩下一级 3 次。</small><small data-i18n="recordRuleNote">打破最佳时间或最高分纪录，可获得额外积分。</small><small data-i18n="hintRuleNote">提示与快速填充不加分；同一格每局只奖励一次。</small></section>
+      <section class="member-card">
+        <div><i>快</i><span><strong data-i18n="expressFill">快速填充</strong><small id="expressStatus">初级功能已解锁</small></span></div>
+        <label id="expressToggleRow"><span data-i18n="expressFill">快速填充</span><input id="expressToggle" type="checkbox"><b></b></label>
+        <p id="expressHelp">初级支持：九宫、行或列只剩最后一个空格时，点击自动填入。</p>
+      </section>
+      <h3 data-i18n="badges">技巧勋章</h3><div id="badgeGrid" class="badge-grid"></div>
+    </div>
+  </div>
+  <div id="rewardModal" class="modal" hidden>
+    <div class="modal-card reward-card" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+      <small id="rewardStage">新技巧解锁</small><div id="rewardIcon" class="reward-icon">✦</div><h2 id="rewardTitle"></h2><p id="rewardDesc"></p>
+      <div id="rewardPoints" class="points-pill">+0 智慧点</div><button id="claimReward" class="primary">收下勋章</button>
+    </div>
+  </div>
+  <div id="techniqueModal" class="modal" hidden>
+    <div class="modal-card technique-card" role="dialog" aria-modal="true" aria-labelledby="techniqueDetailName">
+      <button id="closeTechnique" class="modal-close" aria-label="关闭">×</button>
+      <div id="techniqueDetailIcon" class="reward-icon">一</div><h2 id="techniqueDetailName"></h2><p id="techniqueDetailDesc"></p>
+      <div class="technique-stats"><span><b id="techniqueUseCount">0</b><small>累计使用</small></span><span><b id="techniqueMastery">0/3</b><small>掌握进度</small></span></div>
+      <div id="techniqueBadgeStatus" class="points-pill"></div>
+    </div>
+  </div>
+  <div id="failModal" class="modal" hidden>
+    <div class="modal-card fail-card" role="dialog" aria-modal="true" aria-labelledby="failTitle">
+      <div class="fail-icon">×</div><h2 id="failTitle" data-i18n="roundOver">本轮结束</h2><p data-i18n="roundOverDesc">已经出现 3 次错误，可以重新开局，或扣除积分继续当前棋盘。</p><div id="failPenalty" class="fail-penalty"></div>
+      <button id="continueWithPoints" class="primary">扣积分继续</button>
+      <button id="rechargeContinue" class="secondary" data-i18n="rechargeContinue">充值 10 元得 10000 点</button>
+      <button id="restartAfterFail" class="text-button" data-i18n="restartGame">重新开局</button>
+    </div>
+  </div>
+  <div id="streakFailModal" class="modal" hidden>
+    <div class="modal-card fail-card" role="dialog" aria-modal="true" aria-labelledby="streakFailTitle">
+      <div class="fail-icon">3</div><h2 id="streakFailTitle" data-i18n="streakFailTitle">连续三局失败</h2><p id="streakFailText" data-i18n="streakFailText">当前等级挑战遇到瓶颈，可以降级练习，或充值保留等级。</p>
+      <button id="demoteAndRestart" class="primary" data-i18n="demoteRestart">降级并重新开始</button>
+      <button id="rechargeKeepRank" class="secondary" data-i18n="rechargeKeepRank">充值 10 元得 10000 点</button>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="applause" class="applause" role="status" aria-live="polite"><b id="applauseTitle">👏 漂亮！</b><span id="applauseText"></span></div>
+  <div id="joyMoment" class="joy-moment" role="status" aria-live="polite"><i>✦</i><div><b id="joyTitle"></b><span id="joyText"></span></div></div>
+  <script src="app.js?v=3.0.14"></script>
+</body>
+</html>

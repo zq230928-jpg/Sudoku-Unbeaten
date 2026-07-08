@@ -1,0 +1,4 @@
+.agents/
+*.zip
+_github_publish_*/
+_github_publish_latest/
