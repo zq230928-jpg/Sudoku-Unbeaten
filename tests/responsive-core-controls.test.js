@@ -39,5 +39,7 @@ assert.match(css, /\.board,\.number-pad,\.learning-hint,\.actions\{width:min\(10
 
 assert.doesNotMatch(js, /isDesktop\s*\)/, 'game logic must not remove controls for desktop');
 assert.doesNotMatch(js, /matchMedia\([^)]*\)[\s\S]{0,120}return\s+null/, 'media queries must not delete core controls');
+assert.match(js, /currentPassRate,scoredCells/, 'challenge pass rate must be persisted with the current game');
+assert.match(js, /renderOpeningChallenge\(currentPassRate\);render\(\);updateJourney/, 'restored games must render the challenge notice before the board');
 
 console.log('responsive core controls tests passed');
