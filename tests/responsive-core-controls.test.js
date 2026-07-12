@@ -26,6 +26,7 @@ assert.match(html, /id="learningHint"/, 'AI / step analysis panel must exist in 
 assert.match(css, /v3\.0\.15 网页\/平板\/手机统一核心操作/, 'final responsive button protection rule must be present');
 assert.match(css, /v3\.0\.16：任何屏幕都不能裁掉或隐藏核心功能栏/, 'final clipping protection rule must be present');
 assert.match(css, /v3\.0\.17：桌面和平板也使用同一套完整 GamePage/, 'desktop/tablet must use the complete shared GamePage');
+assert.match(css, /@media\(min-width:561px\) and \(max-width:899px\)/, 'tablet layout must reserve room for the action bar');
 assert.match(css, /\.actions\{display:grid!important;grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/, 'all five action buttons must share one responsive grid');
 assert.match(css, /\.actions button\{display:flex!important;visibility:visible!important/, 'action buttons must remain visible across breakpoints');
 assert.match(css, /\.learning-hint\{display:flex!important;position:relative/, 'analysis panel must remain available and anchor score toasts');
