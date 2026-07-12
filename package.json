@@ -3,7 +3,7 @@
   "version": "3.0.14",
   "private": true,
   "scripts": {
-    "test": "node tests/candidate-notes.test.js",
-    "build": "node --check candidate-notes.js && node --check app.js && node --check puzzle-audit.js && node --check generate-certified-bank.js"
+    "test": "node tests/candidate-notes.test.js && node tests/revive-rules.test.js",
+    "build": "node --check candidate-notes.js && node --check revive-rules.js && node --check app.js && node --check puzzle-audit.js && node --check generate-certified-bank.js"
   }
 }

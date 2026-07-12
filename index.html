@@ -139,7 +139,7 @@
   <div id="failModal" class="modal" hidden>
     <div class="modal-card fail-card" role="dialog" aria-modal="true" aria-labelledby="failTitle">
       <div class="fail-icon">×</div><h2 id="failTitle" data-i18n="roundOver">本轮结束</h2><p data-i18n="roundOverDesc">已经出现 3 次错误，可以重新开局，或扣除积分继续当前棋盘。</p><div id="failPenalty" class="fail-penalty"></div>
-      <button id="continueWithPoints" class="primary">扣积分继续</button>
+      <button id="continueWithPoints" class="primary">复活</button>
       <button id="rechargeContinue" class="secondary" data-i18n="rechargeContinue">充值 10 元得 10000 点</button>
       <button id="restartAfterFail" class="text-button" data-i18n="restartGame">重新开局</button>
     </div>
@@ -155,6 +155,7 @@
   <div id="applause" class="applause" role="status" aria-live="polite"><b id="applauseTitle">👏 漂亮！</b><span id="applauseText"></span></div>
   <div id="joyMoment" class="joy-moment" role="status" aria-live="polite"><i>✦</i><div><b id="joyTitle"></b><span id="joyText"></span></div></div>
   <script src="candidate-notes.js?v=3.0.14"></script>
+  <script src="revive-rules.js?v=3.0.14"></script>
   <script src="app.js?v=3.0.14"></script>
 </body>
 </html>
