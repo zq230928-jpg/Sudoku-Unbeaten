@@ -3,7 +3,7 @@
   "version": "3.0.14",
   "private": true,
   "scripts": {
-    "test": "node tests/candidate-notes.test.js && node tests/revive-rules.test.js && node tests/legend-difficulty.test.js",
+    "test": "node tests/candidate-notes.test.js && node tests/revive-rules.test.js && node tests/legend-difficulty.test.js && node tests/toast-location.test.js",
     "build": "node --check candidate-notes.js && node --check revive-rules.js && node --check extreme-sudoku.js && node --check legend-puzzle-bank.js && node --check app.js && node --check puzzle-audit.js && node --check generate-certified-bank.js"
   }
 }

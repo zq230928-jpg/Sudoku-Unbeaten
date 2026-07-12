@@ -91,7 +91,7 @@ const rechargeProduct={zhPrice:'10 元',enPrice:'$1.99',points:10000};
 const autoNotesCost={advanced:1000,king:2000,legend:5000};
 const playerBenchmarks={novice:{average:340,spread:70},intermediate:{average:620,spread:125},advanced:{average:940,spread:185},king:{average:1320,spread:260},legend:{average:1860,spread:360}};
 const passRateRanges={novice:[78,91],intermediate:[55,72],advanced:[31,48],king:[12,24],legend:[1,1]};
-let solution=[],puzzle=[],values=[],notes=[],selected=null,level='novice',mistakes=0,hints=3,seconds=0,timerId=null,finished=false,toastTimer,noteMode=false,activeNoteNumber=null,selectedPadNumber=null,expressFinishing=false,lastFinalRunAt=0,correctStreak=0,initialEmptyCount=0,journeyMoments=new Set(),lastCoachContext=null,currentPassRate=null;
+let solution=[],puzzle=[],values=[],notes=[],selected=null,level='novice',mistakes=0,hints=3,seconds=0,timerId=null,finished=false,toastTimer,toastQueue=[],toastActive=false,noteMode=false,activeNoteNumber=null,selectedPadNumber=null,expressFinishing=false,lastFinalRunAt=0,correctStreak=0,initialEmptyCount=0,journeyMoments=new Set(),lastCoachContext=null,currentPassRate=null;
 let noteInputMode=null;
 let profile=loadProfile(),pendingBadge=null,scoredCells=new Set(),gameTechniques=new Set(),rewardedGameTechniques=new Set(),completionAwarded=false,currentGameIsTrial=false,gameScore=0,completionRecord=null;
 profile.lastPlayedLevel=profile.lastPlayedLevel||null;
@@ -386,7 +386,8 @@ function updateExpressReminder(){document.querySelectorAll('.cell.express-ready'
 function getCell(r,c){return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`)}
 function tick(){if(!finished){seconds++;timerEl.textContent=formatTime(seconds);if(levelOrder.indexOf(level)===profile.rankIndex){profile.playSeconds[profile.rankIndex]++;if(seconds%10===0){localStorage.setItem('sudoku-profile-v1',JSON.stringify(profile));updateDifficultyAccess()}}saveCurrentGame()}}
 function formatTime(s){return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
-function showToast(msg){const el=document.querySelector('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1800)}
+function showToast(msg){if(!msg)return;toastQueue.push(String(msg));if(!toastActive)showNextToast()}
+function showNextToast(){const el=document.querySelector('#toast'),host=document.querySelector('#learningHint');if(!el||!host)return;const msg=toastQueue.shift();if(!msg){toastActive=false;host.classList.remove('toast-active');return}toastActive=true;host.classList.add('toast-active');el.textContent=msg;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.classList.remove('show');toastTimer=setTimeout(showNextToast,220)},1400)}
 
 document.querySelectorAll('.difficulty button').forEach(btn=>btn.addEventListener('click',()=>{if(expressFinishing)return;const i=levelOrder.indexOf(btn.dataset.level),status=trialEligibility(i);if(!status.eligible){showToast(status.reason);return}if(btn.dataset.level===level)return;level=btn.dataset.level;document.querySelectorAll('.difficulty button').forEach(b=>b.classList.toggle('active',b===btn));newGame()}));
 document.querySelectorAll('[data-number]').forEach(btn=>btn.addEventListener('click',()=>inputNumber(+btn.dataset.number)));
