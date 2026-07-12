@@ -9,6 +9,24 @@ const uiText={
   en:{errors:'Errors',time:'Time',focusTechniques:'Focus techniques',coachWhy:'Why?',coachDisagree:'I disagree',coachSimpler:'Any simpler opening?',coachNext:'Where next?',ask:'Ask',coachPlaceholder:'Ask “Think”, e.g. I do not understand this technique',localCoach:'Local coach: explains from the current board, no internet.',erase:'Erase',notes:'Notes',autoNotes:'Auto notes',hint:'Hint',newGame:'New game',keyboardTip:'Tip: use number keys and arrow keys on desktop',completeTitle:'Nice, completed!',completePrefix:'You completed this ',completeSuffix:' Sudoku',usedTime:'Time',score:'Score',again:'Play again',viewBoard:'View board',currentRank:'Rank',wisdomPoints:'Points',badges:'Technique badges',records:'Records',scoreRules:'Scoring rules',rankRuleNote:'Rank changes with points; you may trial the next level 3 times before qualifying.',recordRuleNote:'New best time or high score grants extra points.',hintRuleNote:'Hints and express fill do not score; each cell scores once per game.',expressFill:'Express fill',challenge:'Challenge',passRate:'Reference clear rate only',avgTime:'average time',beat:'You beat',sameLevelPlayers:'of same-level players',usedTech:'You used',techniqueWord:'techniques',localData:'Local reference data',basic:'Basic elimination',avatarSection:'Avatar',randomAvatar:'Random',photoAvatar:'Photo',applyAvatar:'Apply',photoLocalNote:'Photos are compressed and saved locally only; nothing is uploaded.',customAvatarPlaceholder:'1–2 chars',roundOver:'Revive needed',roundOverDesc:'You have made 3 mistakes. Revive restores only 1 mistake chance, or restart this puzzle.',rechargeContinue:'Recharge $1.99 for 10000 points',restartGame:'Restart',streakFailTitle:'Three failures in a row',streakFailText:'This rank is getting tough. You can practice at a lower rank, or recharge to keep your rank.',demoteRestart:'Demote and restart',rechargeKeepRank:'Recharge $1.99 for 10000 points'}
 };
 const techniqueI18n={nakedSingle:['唯一候选','Naked Single','排除同行、同列和宫内已有数字，只剩一个候选。','Eliminate numbers already present in the row, column, and box; only one candidate remains.'],hiddenSingle:['隐性唯一','Hidden Single','一个数字在某行、列或宫内只有一个可落脚的位置。','A number has only one possible position in a row, column, or box.'],nakedPair:['显性数对','Naked Pair','两个格子共享相同的两个候选，因此可从同一区域其他格中排除它们。','Two cells share the same two candidates, so those candidates can be removed from other cells in the unit.'],hiddenPair:['隐性数对','Hidden Pair','两个数字在同一区域内都只出现在相同两格，可删除这两格中的其他候选。','Two digits appear only in the same two cells of a unit, so other candidates in those cells can be removed.'],nakedTriple:['三数组','Naked Triple','三个格子的候选合集只有三个数字，可从同一区域其他格删除这些候选。','Three cells contain only three combined candidates; remove them from other cells in the unit.'],xWing:['X-Wing','X-Wing','某数字在两行中都只落在相同两列，可从这两列的其他位置排除该数字。','A digit appears in the same two columns across two rows; remove it from other cells in those columns.'],xyWing:['XY-Wing','XY-Wing','三个双候选格形成XY、XZ、YZ结构，可排除共同可见位置的Z候选。','Three bivalue cells form XY, XZ, and YZ; remove Z from cells seeing both wings.'],uniqueRectangle:['唯一矩形','Unique Rectangle','利用四格矩形避免形成双解，从额外候选中完成排除。','Use a four-cell rectangle to avoid a deadly pattern and eliminate extra candidates.'],aic:['强弱链 / AIC','AIC Chain','沿候选的强弱链接交替推导，通过链首尾关系排除候选。','Follow alternating strong and weak links to eliminate candidates from chain relationships.'],als:['ALS 组合','ALS Set','利用近锁定集合之间的受限公共候选进行排除。','Use almost locked sets and restricted common candidates to eliminate candidates.'],lockedCandidate:['区块排除','Locked Candidates','某数字在宫内的候选集中于同一行或列，可排除宫外候选。','A digit’s candidates in a box are locked to one row or column, so remove it outside the box.'],bugPlusOne:['全双值坟墓','BUG+1','所有未定格均为双值，仅一格为三值；用奇偶规律确定额外候选。','All unsolved cells are bivalue except one trivalue cell; parity identifies the extra candidate.']};
+Object.assign(techniqueI18n,{
+  nakedQuad:['显性四数组','Naked Quad','四个格子的候选合集只有四个数字，可从同一区域其他格删除这些候选。','Four cells contain only four combined candidates; remove them from the rest of the unit.'],
+  hiddenTriple:['隐性三数组','Hidden Triple','三个数字在同一区域内只出现在相同三格，可清除这三格的其他候选。','Three digits appear only in the same three cells of a unit; remove other candidates from those cells.'],
+  hiddenQuad:['隐性四数组','Hidden Quad','四个数字在同一区域内只出现在相同四格，可清除这四格的其他候选。','Four digits appear only in the same four cells of a unit; remove other candidates from those cells.'],
+  swordfish:['剑鱼','Swordfish','某数字在三行或三列中锁定相同三列或三行，可删除交叉区域外候选。','A digit is locked across three rows or columns, eliminating candidates in the matching lines.'],
+  jellyfish:['水母','Jellyfish','某数字在四行或四列中锁定相同四列或四行，是更高阶的鱼形排除。','A digit is locked across four rows or columns, a higher-order fish elimination.'],
+  xyzWing:['XYZ-Wing','XYZ-Wing','一个三候选轴格配合两个翼格，可删除共同可见区域中的关键候选。','A three-candidate pivot and two wings eliminate the shared candidate from cells seeing all relevant cells.'],
+  wWing:['W-Wing','W-Wing','两个相同双候选格通过强链连接，可排除共同可见位置的候选。','Two matching bivalue cells connected by a strong link eliminate a shared candidate.'],
+  skyscraper:['摩天楼','Skyscraper','同一数字在两行或两列形成错位强链，可排除同时看见两个端点的候选。','Two offset strong links for one digit eliminate candidates seeing both endpoints.'],
+  twoStringKite:['双线风筝','Two-String Kite','行强链与列强链通过同宫连接，可删除交汇影响位置的候选。','A row strong link and a column strong link connected by a box eliminate the affected candidate.'],
+  emptyRectangle:['空矩形','Empty Rectangle','利用宫内空矩形结构连接行列强链，排除远端候选。','Use an empty-rectangle box pattern with row/column links to eliminate a distant candidate.'],
+  simpleColoring:['简单染色','Simple Coloring','对同一候选的强链两色标记，利用矛盾或共同影响完成排除。','Color strong links for one candidate and eliminate by contradiction or shared visibility.'],
+  multiColoring:['多重染色','Multi-Coloring','多个颜色链相互作用，可发现更隐蔽的候选矛盾。','Multiple coloring chains interact to reveal hidden candidate contradictions.'],
+  xChain:['X-Chain','X-Chain','围绕同一数字建立强弱链，利用链首尾关系排除候选。','Build strong/weak links for one digit and eliminate by endpoint relationships.'],
+  xyChain:['XY-Chain','XY-Chain','多个双候选格串成链，链首尾共同影响的候选可被排除。','Chain bivalue cells; candidates seeing both endpoints can be eliminated.'],
+  forcingChain:['迫使链','Forcing Chain','从一个假设出发沿强制结果推导，若出现矛盾即可排除该假设。','Follow forced consequences from an assumption; contradiction eliminates it.'],
+  forcingNet:['迫使网','Forcing Net','多分支强制推理网，用于极难局面中的深层逻辑验证。','A multi-branch forcing network for deep logical verification in extreme puzzles.']
+});
 function T(key){return(uiText[lang]&&uiText[lang][key])||uiText.zh[key]||key}
 function levelLabel(id){return lang==='en'?levelNamesEn[id]:levelNames[id]}
 function techniqueName(id){return lang==='en'?(techniqueI18n[id]?.[1]||techniques[id]?.name):(techniqueI18n[id]?.[0]||techniques[id]?.name)}
@@ -25,7 +43,8 @@ const skillTemplates={
   ],
   legend:['083020090000800100029300008000098700070000060006740000300006980002005000010030540']
 };
-const advancedRoutes={novice:['显性唯一','显性数对'],intermediate:['隐性唯一','隐性数对','区块排除'],advanced:['区块排除','三数组','X-Wing'],king:['三数组','X-Wing','XY-Wing','唯一矩形'],legend:['X-Wing','XY-Wing','强弱链 / AIC','ALS 组合']},specialTechniqueIds=new Set(['nakedTriple','xWing','xyWing','uniqueRectangle','aic','als','lockedCandidate','bugPlusOne']);
+const legendPuzzleBank=Array.isArray(globalThis.SudokuLegendPuzzleBank)?globalThis.SudokuLegendPuzzleBank:[];
+const advancedRoutes={novice:['显性唯一','显性数对'],intermediate:['隐性唯一','隐性数对','区块排除'],advanced:['区块排除','三数组','X-Wing'],king:['三数组','X-Wing','XY-Wing','唯一矩形'],legend:['剑鱼','空矩形','XY-Chain','强弱链 / AIC','迫使链','迫使网']},specialTechniqueIds=new Set(['nakedTriple','xWing','xyWing','uniqueRectangle','aic','als','lockedCandidate','bugPlusOne','nakedQuad','hiddenTriple','hiddenQuad','swordfish','jellyfish','xyzWing','wWing','skyscraper','twoStringKite','emptyRectangle','simpleColoring','multiColoring','xChain','xyChain','forcingChain','forcingNet']);
 const techniques={
   nakedSingle:{name:'唯一候选',icon:'一',points:20,desc:'排除同行、同列和宫内已有数字，只剩一个候选。'},
   hiddenSingle:{name:'隐性唯一',icon:'隐',points:30,desc:'一个数字在某行、列或宫内只有一个可落脚的位置。'},
@@ -40,12 +59,30 @@ const techniques={
   lockedCandidate:{name:'区块排除',icon:'锁',points:60,desc:'某数字在宫内的候选集中于同一行或列，可排除宫外候选。'},
   bugPlusOne:{name:'全双值坟墓',icon:'墓',points:120,desc:'所有未定格均为双值，仅一格为三值；用奇偶规律确定额外候选。'}
 };
+Object.assign(techniques,{
+  nakedQuad:{name:'显性四数组',icon:'四',points:85,desc:'四个格子的候选合集只有四个数字，可从同一区域其他格删除这些候选。'},
+  hiddenTriple:{name:'隐性三数组',icon:'隐三',points:85,desc:'三个数字在同一区域内只出现在相同三格，可清除这三格的其他候选。'},
+  hiddenQuad:{name:'隐性四数组',icon:'隐四',points:100,desc:'四个数字在同一区域内只出现在相同四格，可清除这四格的其他候选。'},
+  swordfish:{name:'剑鱼',icon:'剑',points:130,desc:'三行或三列锁定同一数字，形成高阶鱼形排除。'},
+  jellyfish:{name:'水母',icon:'母',points:160,desc:'四行或四列锁定同一数字，形成极高阶鱼形排除。'},
+  xyzWing:{name:'XYZ-Wing',icon:'翼+',points:135,desc:'三候选轴格与两个翼格共同限制关键候选。'},
+  wWing:{name:'W-Wing',icon:'W',points:140,desc:'两个相同双候选格通过强链连接，排除共同可见候选。'},
+  skyscraper:{name:'摩天楼',icon:'楼',points:120,desc:'同一数字的两组强链错位形成排除。'},
+  twoStringKite:{name:'双线风筝',icon:'筝',points:125,desc:'行列强链通过九宫连接后形成排除。'},
+  emptyRectangle:{name:'空矩形',icon:'空',points:135,desc:'利用宫内空矩形与行列强链排除远端候选。'},
+  simpleColoring:{name:'简单染色',icon:'色',points:145,desc:'用两色标记候选强链，从矛盾或共同影响中排除。'},
+  multiColoring:{name:'多重染色',icon:'彩',points:155,desc:'多组颜色链相互作用，发现隐蔽矛盾。'},
+  xChain:{name:'X-Chain',icon:'X链',points:170,desc:'围绕同一数字的强弱链推理。'},
+  xyChain:{name:'XY-Chain',icon:'XY',points:180,desc:'双候选格串联形成的候选链。'},
+  forcingChain:{name:'迫使链',icon:'迫',points:210,desc:'沿假设的强制结果推导并排除矛盾。'},
+  forcingNet:{name:'迫使网',icon:'网',points:260,desc:'多分支深层逻辑网，用于求败级极限题。'}
+});
 const avatars=['◈','✦','☘','月','山','水','竹','九'];
 const ranks=[
   {name:'初级',min:0},{name:'中级',min:1000},{name:'高级',min:3000},{name:'王者',min:20000},{name:'求败',min:100000}
 ],difficultyScore={novice:1,intermediate:2,advanced:4,king:8,legend:16},requiredPlaySeconds=[0,0,0,0,0];
 const featureMilestones=[{id:'expressFill',name:'高级快速填充',rankIndex:2,points:100}];
-const basicTechniqueIds=new Set(['nakedSingle','hiddenSingle','nakedPair','hiddenPair']),techniqueMultipliers={lockedCandidate:[3,5],nakedTriple:[4,6],xWing:[6,8],xyWing:[7,9],uniqueRectangle:[7,9],bugPlusOne:[8,10],aic:[9,10],als:[9,10]};
+const basicTechniqueIds=new Set(['nakedSingle','hiddenSingle','nakedPair','hiddenPair']),techniqueMultipliers={lockedCandidate:[3,5],nakedTriple:[4,6],xWing:[6,8],xyWing:[7,9],uniqueRectangle:[7,9],bugPlusOne:[8,10],aic:[9,10],als:[9,10],swordfish:[7,9],jellyfish:[8,10],xyzWing:[7,9],wWing:[7,9],skyscraper:[6,8],twoStringKite:[6,8],emptyRectangle:[7,9],simpleColoring:[8,10],multiColoring:[8,10],xChain:[9,10],xyChain:[9,10],forcingChain:[10,10],forcingNet:[10,10]};
 const reviveRules=globalThis.SudokuReviveRules||{};
 const reviveCost=reviveRules.reviveCost||((id,points)=>id==='legend'?Math.ceil(Math.max(0,points)/3):({novice:50,intermediate:100,advanced:500,king:1000}[id]??50));
 const canRevive=reviveRules.canRevive||((id,points)=>id==='legend'?points>0:points>=reviveCost(id,points));
@@ -65,7 +102,7 @@ const techniqueLessons={
   '显性唯一':'排除同行、同列和九宫内已经出现的数字；若候选只剩一个，就能确定该格。','隐性唯一':'观察同一行、列或九宫：如果某个数字只有一个候选位置，该位置就是答案。','区块排除':'若某数字在一个九宫内的候选位置全部落在同一行或列，可从该行或列的宫外格删除这个候选。','显性数对':'同一区域内若两个格子恰好拥有相同的两个候选，这两个数字被它们占据，可从其他格删除。','隐性数对':'同一区域内若两个数字都只出现在相同的两个格中，可删除这两格里的其他候选。','三数组':'三个格子的候选合集只有三个数字时，这三个数字被锁定，可从同一区域其他格删除。','X-Wing':'同一数字在两行中都只出现在相同两列，可从这两列的其他行删除该候选。','XY-Wing':'找到三个双候选格形成 XY、XZ、YZ 结构，可删除同时看见两个翼格的 Z 候选。','唯一矩形':'四格构成矩形且可能产生双解时，利用额外候选破坏矩形，避免无唯一解。','BUG+1':'所有未定格均为双值、仅一格为三值时，利用行列宫候选奇偶次数确定额外候选。','强弱链 / AIC':'沿候选的强链接和弱链接交替推导；链首尾形成矛盾或共同影响时即可排除候选。','ALS 组合':'寻找候选数比格子数多一个的近锁定集合，利用集合间受限公共候选进行排除。','多技巧链式推理':'先用区块、数组等局部排除缩小候选，再连接强弱关系完成链式排除。'
 };
 const lessonDetectorIds={'显性唯一':'nakedSingle','隐性唯一':'hiddenSingle','区块排除':'lockedCandidate','显性数对':'nakedPair','BUG+1':'bugPlusOne'};
-const routeTechniqueIds={'显性唯一':'nakedSingle','隐性唯一':'hiddenSingle','区块排除':'lockedCandidate','显性数对':'nakedPair','隐性数对':'hiddenPair','三数组':'nakedTriple','X-Wing':'xWing','XY-Wing':'xyWing','唯一矩形':'uniqueRectangle','BUG+1':'bugPlusOne','强弱链 / AIC':'aic','ALS 组合':'als','多技巧链式推理':'aic'};
+const routeTechniqueIds={'显性唯一':'nakedSingle','隐性唯一':'hiddenSingle','区块排除':'lockedCandidate','显性数对':'nakedPair','隐性数对':'hiddenPair','三数组':'nakedTriple','X-Wing':'xWing','XY-Wing':'xyWing','唯一矩形':'uniqueRectangle','BUG+1':'bugPlusOne','强弱链 / AIC':'aic','ALS 组合':'als','多技巧链式推理':'aic','剑鱼':'swordfish','水母':'jellyfish','空矩形':'emptyRectangle','XY-Chain':'xyChain','X-Chain':'xChain','迫使链':'forcingChain','迫使网':'forcingNet'};
 profile.soundEnabled=profile.soundEnabled!==false;profile.funRewards=[...(profile.funRewards||[])];
 
 function loadProfile(){try{const stored=JSON.parse(localStorage.getItem('sudoku-profile-v1')||'{}'),data={name:'数独新手',avatar:'◈',avatarColor:'#6f8062',points:0,badges:[],techniqueCounts:{},techniqueUses:{},expressEnabled:true,rankIndex:0,playSeconds:[0,0,0,0,0],trialAttempts:{},trialWinStreaks:{},trialFastWins:{},bestTimes:{},highScores:{},featureRewards:[],gamesStarted:{},gamesCompleted:{},dailyFailures:{date:'',counts:{}},profileVersion:2,...stored};if(!stored.profileVersion){data.expressEnabled=true;data.profileVersion=2}data.rankIndex=Math.max(0,Math.min(4,data.rankIndex||0));data.playSeconds=[0,0,0,0,0].map((_,i)=>data.playSeconds?.[i]||0);data.trialAttempts={...(stored.trialAttempts||{})};data.trialWinStreaks={...(stored.trialWinStreaks||{})};data.trialFastWins={...(stored.trialFastWins||{})};data.bestTimes={...(stored.bestTimes||{})};data.highScores={...(stored.highScores||{})};data.gamesStarted={...(stored.gamesStarted||{})};data.gamesCompleted={...(stored.gamesCompleted||{})};data.dailyFailures={date:stored.dailyFailures?.date||'',counts:{...(stored.dailyFailures?.counts||{})}};for(const id of levelOrder)if(data.bestTimes[id]){data.gamesCompleted[id]=Math.max(1,data.gamesCompleted[id]||0);data.gamesStarted[id]=Math.max(data.gamesCompleted[id],data.gamesStarted[id]||0)}data.featureRewards=[...(stored.featureRewards||[])];data.techniqueCounts={...(stored.techniqueCounts||{})};data.techniqueUses={...(stored.techniqueUses||{})};for(const id of Object.keys(techniques))data.techniqueUses[id]=Math.max(data.techniqueUses[id]||0,data.techniqueCounts[id]||0);data.badges.forEach(id=>data.techniqueCounts[id]=Math.max(3,data.techniqueCounts[id]||0));return data}catch{return{name:'数独新手',avatar:'◈',avatarColor:'#6f8062',points:0,badges:[],techniqueCounts:{},techniqueUses:{},expressEnabled:true,rankIndex:0,trialWinStreaks:{},trialFastWins:{},dailyFailures:{date:'',counts:{}},profileVersion:2}}}
@@ -186,6 +223,10 @@ function countSolutions(grid,limit=2){
 }
 function valid(grid,r,c,n){for(let i=0;i<9;i++)if(grid[r][i]===n||grid[i][c]===n)return false;let rr=Math.floor(r/3)*3,cc=Math.floor(c/3)*3;for(let y=rr;y<rr+3;y++)for(let x=cc;x<cc+3;x++)if(grid[y][x]===n)return false;return true}
 function makePuzzle(){
+  if(level==='legend'&&legendPuzzleBank.length){
+    const entry=legendPuzzleBank[Math.floor(Math.random()*legendPuzzleBank.length)];
+    return transformedExpertPuzzle(entry.puzzle);
+  }
   const templates=skillTemplates[level],template=templates[Math.floor(Math.random()*templates.length)];return transformedExpertPuzzle(template);
 }
 function newGame(){
