@@ -1,4 +1,4 @@
-/* 数独求败 v3.0.16 网页功能一致版 */
+/* 数独求败 v3.0.17 桌面完整功能版 */
 .technique-route p{display:flex;flex-wrap:wrap;gap:5px}.technique-route p button{border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);padding:3px 8px;font-size:9px;cursor:pointer}.technique-route p button:hover,.technique-route p button.active{border-color:var(--accent);background:var(--accent);color:#fff}
 
 #profileScore{position:relative;transition:color .2s,transform .2s}.score-gain{color:#c58b24!important;transform:scale(1.16)}.score-gain::after{content:attr(data-gain);position:absolute;left:50%;top:-18px;color:#d49a2f;font-size:12px;font-weight:700;animation:scoreFloat .9s ease-out forwards;pointer-events:none}@keyframes scoreFloat{from{opacity:0;transform:translate(-50%,8px) scale(.8)}35%{opacity:1}to{opacity:0;transform:translate(-50%,-18px) scale(1.08)}}.score-fly{position:fixed;z-index:80;left:0;top:0;transform:translate(-50%,-50%) scale(.65);pointer-events:none;font:900 32px Georgia,"Times New Roman",serif;letter-spacing:.02em;text-shadow:0 2px 0 rgba(255,255,255,.65),0 10px 24px rgba(70,62,30,.22);animation:scoreMeteor .82s cubic-bezier(.12,.78,.18,1) forwards}.score-fly.plus{color:#c88919}.score-fly.minus{color:var(--error)}.score-fly::after{content:"";position:absolute;right:82%;top:50%;width:42px;height:3px;border-radius:999px;background:linear-gradient(90deg,transparent,currentColor);opacity:.45;transform:translateY(-50%)}@keyframes scoreMeteor{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.22)}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.38) rotate(-10deg)}}
@@ -175,4 +175,26 @@ body{overflow-x:hidden;overflow-y:auto!important}
 .challenge-notice:not([hidden]){display:grid!important}
 .actions:not([hidden]){display:grid!important}
 .learning-hint:not([hidden]),.learning-hint[hidden]{display:flex!important}
+
+/* v3.0.17：桌面和平板也使用同一套完整 GamePage，不再用大棋盘挤掉功能区 */
+@media(min-width:561px){
+  html,body{height:auto!important;min-height:100%}
+  .app{height:auto!important;min-height:100dvh;padding-top:16px;padding-bottom:18px}
+  .topbar{display:flex!important}
+  .game-card{height:auto!important;min-height:0;overflow:visible!important}
+  .challenge-notice:not([hidden]){display:grid!important}
+  .board,.number-pad,.learning-hint,.actions{width:min(100%,calc(100dvh - 430px),560px)!important}
+  .number-pad{margin-top:8px;margin-bottom:8px}
+  .learning-hint{height:76px;min-height:76px;margin-bottom:8px}
+  .learning-hint[hidden]{height:76px;min-height:76px}
+  .actions button{height:40px}
+}
+
+@media(min-width:561px) and (min-height:980px){
+  .board,.number-pad,.learning-hint,.actions{width:min(100%,560px)!important}
+}
+
+@media(min-width:1200px) and (max-height:940px){
+  .board,.number-pad,.learning-hint,.actions{width:min(100%,470px)!important}
+}
 
