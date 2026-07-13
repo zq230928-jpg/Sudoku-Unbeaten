@@ -1,6 +1,6 @@
 {
   "name": "sudoku-unbeaten",
-  "version": "3.0.19",
+  "version": "3.0.20",
   "private": true,
   "scripts": {
     "test": "node tests/candidate-notes.test.js && node tests/revive-rules.test.js && node tests/legend-difficulty.test.js && node tests/toast-location.test.js && node tests/audio-persistence.test.js && node tests/responsive-core-controls.test.js",

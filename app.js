@@ -1,4 +1,4 @@
-// 数独求败 v3.0.14 手机音效唤醒版
+// 数独求败 v3.0.20 P0 状态与音频稳定版
 const boardEl=document.querySelector('#board'),timerEl=document.querySelector('#timer'),mistakesEl=document.querySelector('#mistakes');
 const urlLang=new URLSearchParams(location.search).get('lang');
 let lang=urlLang==='en'?'en':urlLang==='zh'?'zh':localStorage.getItem('sudoku-lang')||'zh';
@@ -168,27 +168,76 @@ document.addEventListener('click',e=>{const button=e.target.closest?.('#recharge
 function flashScore(amount){const score=document.querySelector('#profileScore');if(!score)return;score.dataset.gain=`+${amount}`;score.classList.remove('score-gain');void score.offsetWidth;score.classList.add('score-gain');setTimeout(()=>score.classList.remove('score-gain'),900)}
 function flyScore(amount){const board=document.querySelector('#board'),target=document.querySelector('#profileScore');if(!board||!target)return;const from=board.getBoundingClientRect(),to=target.getBoundingClientRect(),chip=document.createElement('b');chip.className=`score-fly ${amount<0?'minus':'plus'}`;chip.textContent=`${amount>0?'+':''}${amount}`;chip.style.left=`${from.left+from.width/2}px`;chip.style.top=`${from.top+from.height/2}px`;chip.style.setProperty('--tx',`${to.left+to.width/2-(from.left+from.width/2)}px`);chip.style.setProperty('--ty',`${to.top+to.height/2-(from.top+from.height/2)}px`);document.body.append(chip);setTimeout(()=>chip.remove(),900)}
 let soundCtx=null,soundUnlocked=false;
-function getSoundContext(){const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return null;if(!soundCtx||soundCtx.state==='closed')soundCtx=new AudioCtx();return soundCtx}
+function isStandaloneMode(){return window.matchMedia?.('(display-mode: standalone)')?.matches||window.navigator.standalone===true}
+function isPwaMode(){return isStandaloneMode()||document.referrer.startsWith('android-app://')}
+function audioDebugEnabled(){return new URLSearchParams(location.search).has('debug')||localStorage.getItem('sudoku-audio-debug')==='1'}
+function audioDebugSnapshot(){return{Difficulty:level,'Audio Enabled':!!profile.soundEnabled,AudioContext:soundCtx?soundCtx.state:'none','Sound Loaded':'WebAudio synthesizer',PWA:isPwaMode(),Standalone:isStandaloneMode(),'Current Route':location.href}}
+function audioLog(event,detail={}){if(!audioDebugEnabled())return;console.info(`[Sudoku Audio] ${event}`,{...audioDebugSnapshot(),...detail})}
+const audioManager={
+  initialized:false,
+  getContext(){
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx){audioLog('Audio initialized',{supported:false});return null}
+    if(!soundCtx||soundCtx.state==='closed'){
+      soundCtx=new AudioCtx();
+      this.initialized=true;
+      audioLog('Audio initialized',{supported:true,state:soundCtx.state});
+      soundCtx.onstatechange=()=>audioLog('AudioContext state',{state:soundCtx.state});
+    }
+    return soundCtx
+  },
+  resume(reason='resume'){
+    if(!profile.soundEnabled)return Promise.resolve(false);
+    try{
+      const ctx=this.getContext();
+      if(!ctx)return Promise.resolve(false);
+      audioLog('resume()',{reason,state:ctx.state});
+      if(ctx.state==='suspended')return ctx.resume().then(()=>{markSoundUnlocked();audioLog('AudioContext state',{state:ctx.state,reason});return true}).catch(error=>{audioLog('play failed',{soundName:reason,error:String(error?.message||error)});return false});
+      markSoundUnlocked();
+      return Promise.resolve(true)
+    }catch(error){audioLog('play failed',{soundName:reason,error:String(error?.message||error)});return Promise.resolve(false)}
+  },
+  withContext(soundName,run,{log=true}={}){
+    if(!profile.soundEnabled){audioLog('play skipped',{soundName,reason:'sound disabled'});return}
+    try{
+      const ctx=this.getContext();
+      if(!ctx){audioLog('play failed',{soundName,error:'AudioContext unsupported'});return}
+      if(log)audioLog(`play ${soundName}`,{state:ctx.state});
+      const execute=()=>{try{run(ctx);markSoundUnlocked()}catch(error){audioLog('play failed',{soundName,error:String(error?.message||error)})}};
+      if(ctx.state==='suspended')ctx.resume().then(execute).catch(error=>audioLog('play failed',{soundName,error:String(error?.message||error)}));
+      else execute()
+    }catch(error){audioLog('play failed',{soundName,error:String(error?.message||error)})}
+  },
+  unlock(reason='user gesture'){
+    if(!profile.soundEnabled)return;
+    if(soundUnlocked&&soundCtx?.state==='running')return;
+    this.resume(`unlockAudio:${reason}`).then(ok=>{if(ok){try{playPrimeTone(soundCtx,.0001)}catch(error){audioLog('play failed',{soundName:'unlock',error:String(error?.message||error)})}}})
+  },
+  destroy(){audioLog('destroy() ignored',{reason:'singleton preserved for game lifetime'})}
+};
+function getSoundContext(){return audioManager.getContext()}
 function updateSoundUnlock(){const button=document.querySelector('#soundUnlock');if(!button)return;button.textContent=lang==='en'?'Enable sound':'开启音效';button.setAttribute('aria-label',lang==='en'?'Enable game sound':'开启游戏音效');button.hidden=profile.soundEnabled&&soundUnlocked}
-function playPrimeTone(ctx){const now=ctx.currentTime;[523.25,659.25,783.99].forEach((frequency,i)=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=now+i*.075;oscillator.type=i%2?'triangle':'sine';oscillator.frequency.setValueAtTime(frequency,start);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(.085,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.16);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+.18)})}
+function playPrimeTone(ctx,volume=.085){const now=ctx.currentTime;[523.25,659.25,783.99].forEach((frequency,i)=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=now+i*.075;oscillator.type=i%2?'triangle':'sine';oscillator.frequency.setValueAtTime(frequency,start);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.16);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+.18)})}
 function markSoundUnlocked(){soundUnlocked=true;updateSoundUnlock();updateSoundButton?.()}
-function primeAudio(){profile.soundEnabled=true;localStorage.setItem('sudoku-profile-v1',JSON.stringify(profile));try{const ctx=getSoundContext();if(!ctx){showToast(lang==='en'?'This browser does not support game sound':'这个浏览器暂不支持游戏音效');return}const play=()=>{playPrimeTone(ctx);markSoundUnlocked();showToast(lang==='en'?'Sound enabled':'音效已开启')};if(ctx.state==='suspended')ctx.resume().then(play).catch(()=>showToast(lang==='en'?'Tap again to enable sound':'请再点一次开启音效'));else play()}catch{showToast(lang==='en'?'Tap again to enable sound':'请再点一次开启音效')}}
-function unlockAudio(){if(!profile.soundEnabled)return;try{const ctx=getSoundContext();if(!ctx)return;if(ctx.state==='suspended')ctx.resume().then(markSoundUnlocked).catch(()=>{});else markSoundUnlocked()}catch{}}
-['pointerdown','touchstart','keydown'].forEach(type=>document.addEventListener(type,unlockAudio,{capture:true,passive:true}));
-function preserveAudioAfterGameReset(){if(!profile.soundEnabled)return;unlockAudio()}
-function withSoundContext(run){if(!profile.soundEnabled)return;try{const ctx=getSoundContext();if(!ctx)return;if(ctx.state==='suspended')ctx.resume().then(()=>run(ctx)).catch(()=>{});else run(ctx)}catch{}}
-function playTone(frequency,{delay=0,duration=.16,type='sine',volume=.07,slideTo=null}={}){withSoundContext(ctx=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+delay;oscillator.type=type;oscillator.frequency.setValueAtTime(frequency,start);if(slideTo)oscillator.frequency.exponentialRampToValueAtTime(slideTo,start+duration*.88);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+duration);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+duration+.02)})}
-function playNumberTone(n){const scale=[261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33];playTone(scale[n-1]||523.25,{duration:.15,type:'sine',volume:.075})}
-function playCorrectSound(){[659.25,783.99,1046.5].forEach((f,i)=>playTone(f,{delay:i*.045,duration:.14,type:'triangle',volume:.065}))}
-function playWrongSound(){playTone(196,{duration:.25,type:'sawtooth',volume:.055,slideTo:146.83});setTimeout(()=>playTone(130.81,{duration:.15,type:'triangle',volume:.05}),80)}
-function playEraseSound(){[392,329.63,261.63].forEach((f,i)=>playTone(f,{delay:i*.035,duration:.1,type:'triangle',volume:.045}))}
-function playHintSound(){[523.25,659.25,587.33].forEach((f,i)=>playTone(f,{delay:i*.055,duration:.13,type:'sine',volume:.06}))}
-function playAutoNotesSound(){[392,493.88,587.33,783.99].forEach((f,i)=>playTone(f,{delay:i*.04,duration:.11,type:'triangle',volume:.055}))}
-function playSwooshSound(amount=1){const up=amount>=0;playTone(up?740:330,{duration:.16,type:'triangle',volume:.035,slideTo:up?1480:165});setTimeout(()=>playTone(up?1174.66:220,{duration:.1,type:'sine',volume:.025}),65)}
-function playFailMusic(){[392,330,294,349,262,392].forEach((f,i)=>playTone(f,{delay:i*.105,duration:i===5?.18:.11,type:i%2?'square':'triangle',volume:.045,slideTo:i===2?330:null}))}
-function playVictoryMusic(){[523.25,659.25,783.99,1046.5,987.77,1046.5,1318.51].forEach((f,i)=>playTone(f,{delay:i*.085,duration:i>4?.22:.13,type:i===6?'triangle':'sine',volume:i===6?.075:.06}));setTimeout(()=>playApplause(),390)}
-function playFinalRunMusic(){const notes=[523.25,659.25,783.99,1046.5,783.99,987.77,1174.66,1318.51,1567.98,1318.51,1567.98,1760];notes.forEach((f,i)=>playTone(f,{delay:i*.12,duration:i>8?.22:.13,type:i%3===0?'triangle':'sine',volume:i>8?.07:.052}));setTimeout(()=>playApplause(),980)}
-function playCoinSound(){withSoundContext(ctx=>{const now=ctx.currentTime;[880,1320].forEach((frequency,i)=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=now+i*.065;oscillator.type='triangle';oscillator.frequency.setValueAtTime(frequency,start);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(.11,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.13);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+.15)})})}
+function primeAudio(){profile.soundEnabled=true;localStorage.setItem('sudoku-profile-v1',JSON.stringify(profile));try{const ctx=getSoundContext();if(!ctx){showToast(lang==='en'?'This browser does not support game sound':'这个浏览器暂不支持游戏音效');return}const play=()=>{playPrimeTone(ctx);markSoundUnlocked();audioLog('unlockAudio',{reason:'button',state:ctx.state});showToast(lang==='en'?'Sound enabled':'音效已开启')};if(ctx.state==='suspended')ctx.resume().then(play).catch(error=>{audioLog('play failed',{soundName:'unlock',error:String(error?.message||error)});showToast(lang==='en'?'Tap again to enable sound':'请再点一次开启音效')});else play()}catch(error){audioLog('play failed',{soundName:'unlock',error:String(error?.message||error)});showToast(lang==='en'?'Tap again to enable sound':'请再点一次开启音效')}}
+function unlockAudio(eventOrReason){const reason=typeof eventOrReason==='string'?eventOrReason:eventOrReason?.type||'user gesture';audioManager.unlock(reason)}
+['pointerdown','touchstart','click','keydown'].forEach(type=>document.addEventListener(type,unlockAudio,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{audioLog('visibilitychange',{hidden:document.hidden});if(!document.hidden)audioManager.resume('visibilitychange')});
+window.addEventListener('pageshow',()=>audioLog('pageshow'));
+function preserveAudioAfterGameReset(){if(!profile.soundEnabled)return;unlockAudio('game reset')}
+function withSoundContext(run,soundName='sound'){audioManager.withContext(soundName,run,{log:false})}
+function playTone(frequency,{delay=0,duration=.16,type='sine',volume=.07,slideTo=null,soundName='tone'}={}){audioManager.withContext(soundName,ctx=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+delay;oscillator.type=type;oscillator.frequency.setValueAtTime(frequency,start);if(slideTo)oscillator.frequency.exponentialRampToValueAtTime(slideTo,start+duration*.88);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+duration);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+duration+.02)},{log:false})}
+function playNumberTone(n){audioLog('play click',{number:n});const scale=[261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33];playTone(scale[n-1]||523.25,{duration:.15,type:'sine',volume:.075,soundName:'click'})}
+function playCorrectSound(){audioLog('play success');[659.25,783.99,1046.5].forEach((f,i)=>playTone(f,{delay:i*.045,duration:.14,type:'triangle',volume:.065,soundName:'success'}))}
+function playWrongSound(){audioLog('play error');playTone(196,{duration:.25,type:'sawtooth',volume:.055,slideTo:146.83,soundName:'error'});setTimeout(()=>playTone(130.81,{duration:.15,type:'triangle',volume:.05,soundName:'error'}),80)}
+function playEraseSound(){audioLog('play erase');[392,329.63,261.63].forEach((f,i)=>playTone(f,{delay:i*.035,duration:.1,type:'triangle',volume:.045,soundName:'erase'}))}
+function playHintSound(){audioLog('play hint');[523.25,659.25,587.33].forEach((f,i)=>playTone(f,{delay:i*.055,duration:.13,type:'sine',volume:.06,soundName:'hint'}))}
+function playAutoNotesSound(){audioLog('play mark');[392,493.88,587.33,783.99].forEach((f,i)=>playTone(f,{delay:i*.04,duration:.11,type:'triangle',volume:.055,soundName:'mark'}))}
+function playSwooshSound(amount=1){audioLog('play score',{amount});const up=amount>=0;playTone(up?740:330,{duration:.16,type:'triangle',volume:.035,slideTo:up?1480:165,soundName:'score'});setTimeout(()=>playTone(up?1174.66:220,{duration:.1,type:'sine',volume:.025,soundName:'score'}),65)}
+function playFailMusic(){audioLog('play fail');[392,330,294,349,262,392].forEach((f,i)=>playTone(f,{delay:i*.105,duration:i===5?.18:.11,type:i%2?'square':'triangle',volume:.045,slideTo:i===2?330:null,soundName:'fail'}))}
+function playVictoryMusic(){audioLog('play success',{music:'victory'});[523.25,659.25,783.99,1046.5,987.77,1046.5,1318.51].forEach((f,i)=>playTone(f,{delay:i*.085,duration:i>4?.22:.13,type:i===6?'triangle':'sine',volume:i===6?.075:.06,soundName:'success'}));setTimeout(()=>playApplause(),390)}
+function playFinalRunMusic(){audioLog('play success',{music:'final-run'});const notes=[523.25,659.25,783.99,1046.5,783.99,987.77,1174.66,1318.51,1567.98,1318.51,1567.98,1760];notes.forEach((f,i)=>playTone(f,{delay:i*.12,duration:i>8?.22:.13,type:i%3===0?'triangle':'sine',volume:i>8?.07:.052,soundName:'success'}));setTimeout(()=>playApplause(),980)}
+function playCoinSound(){audioLog('play reward');audioManager.withContext('reward',ctx=>{const now=ctx.currentTime;[880,1320].forEach((frequency,i)=>{const oscillator=ctx.createOscillator(),gain=ctx.createGain(),start=now+i*.065;oscillator.type='triangle';oscillator.frequency.setValueAtTime(frequency,start);gain.gain.setValueAtTime(.001,start);gain.gain.exponentialRampToValueAtTime(.11,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.13);oscillator.connect(gain).connect(ctx.destination);oscillator.start(start);oscillator.stop(start+.15)})})}
 function unlockTechnique(id){
   const t=techniques[id];if(!t)return;profile.techniqueUses[id]=(profile.techniqueUses[id]||0)+1;if(profile.badges.includes(id)){saveProfile();return}const previous=profile.techniqueCounts[id]||0,count=Math.min(3,previous+1);profile.techniqueCounts[id]=count;if(previous===0){profile.points+=100;gameScore+=100;flashScore(100);playCoinSound()}saveProfile();pendingBadge=count===3?id:null;
   const stages=['','个人首次解锁 · 1/3','技巧练习 · 2/3','技巧掌握 · 3/3'];document.querySelector('#rewardStage').textContent=stages[count];document.querySelector('#rewardIcon').textContent=t.icon;document.querySelector('#rewardTitle').textContent=t.name;if(previous===0){playJoyMelody();celebrateJoy('新技巧已点亮',`「${t.name}」进入你的学习档案 · +100 智慧点`,false)}
@@ -399,10 +448,10 @@ function toggleNoteMode(){if(expressFinishing)return;noteMode=!noteMode;activeNo
 document.querySelector('#notesButton').addEventListener('click',toggleNoteMode);
 document.querySelector('#autoNotesButton').addEventListener('click',fillAllCandidateNotes);
 document.querySelector('#techniqueRouteText').addEventListener('click',e=>{const button=e.target.closest('[data-route-technique]');if(!button)return;selectedRouteTechnique=button.dataset.routeTechnique;updateTechniqueRoute();showToast(`已选择「${selectedRouteTechnique}」，点击提示查看教学`) });
-document.querySelector('#againButton').addEventListener('click',()=>{document.querySelector('#modal').hidden=true;selectDefaultLevel();newGame()});document.querySelector('#closeModal').addEventListener('click',()=>document.querySelector('#modal').hidden=true);
+document.querySelector('#againButton').addEventListener('click',()=>{document.querySelector('#modal').hidden=true;newGame()});document.querySelector('#closeModal').addEventListener('click',()=>document.querySelector('#modal').hidden=true);
 function localDateKey(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function registerDailyFailure(){const today=localDateKey();if(profile.dailyFailures.date!==today)profile.dailyFailures={date:today,counts:{}};if(currentGameIsTrial){const target=ranks[levelOrder.indexOf(level)];profile.trialWinStreaks[target.name]=0;saveProfile();return null}const rankLevel=levelOrder[profile.rankIndex];if(level!==rankLevel||profile.rankIndex===0){saveProfile();return null}const count=(profile.dailyFailures.counts[level]||0)+1,limit=level==='legend'?3:10;profile.dailyFailures.counts[level]=count;if(count<limit){saveProfile();return{text:lang==='en'?`Today’s failures ${count}/${limit}`:`今日失败 ${count}/${limit}`,demoted:false}};const oldRank=profile.rankIndex,newRank=Math.max(0,oldRank-1);profile.points=Math.min(profile.points,ranks[oldRank].min-1);profile.dailyFailures.counts[level]=0;saveProfile();return{text:lang==='en'?`You failed ${limit} times today and were demoted to ${levelLabel(levelOrder[newRank])}.`:`今日累计失败 ${limit} 局，已降级为${ranks[newRank].name}`,demoted:true}}
-document.querySelector('#restartAfterFail').addEventListener('click',()=>{document.querySelector('#failModal').hidden=true;const result=registerDailyFailure();if(result?.demoted){document.querySelector('#streakFailText').textContent=result.text;document.querySelector('#demoteAndRestart').textContent=lang==='en'?'Restart at new rank':'按新等级重新开始';document.querySelector('#streakFailModal').hidden=false;return}if(result)showToast(result.text);selectDefaultLevel();newGame()});
+document.querySelector('#restartAfterFail').addEventListener('click',()=>{document.querySelector('#failModal').hidden=true;const result=registerDailyFailure();if(result?.demoted){document.querySelector('#streakFailText').textContent=result.text;document.querySelector('#demoteAndRestart').textContent=lang==='en'?'Restart at new rank':'按新等级重新开始';document.querySelector('#streakFailModal').hidden=false;return}if(result)showToast(result.text);newGame()});
 document.querySelector('#demoteAndRestart').addEventListener('click',()=>{document.querySelector('#streakFailModal').hidden=true;selectDefaultLevel();newGame()});
 document.querySelector('#continueWithPoints').addEventListener('click',e=>{const button=e.currentTarget;if(button.disabled||button.dataset.busy==='1')return;button.dataset.busy='1';button.disabled=true;const result=applyReviveRule({level,currentPoints:profile.points,mistakes});if(!result.ok){updateRevivePanel();showToast(lang==='en'?'Not enough points to revive':'积分不足，无法复活');return}profile.points=result.points;mistakes=result.mistakes;gameScore=Math.max(0,gameScore-result.cost);localStorage.setItem('sudoku-profile-v1',JSON.stringify(profile));saveProfile();flyScore(-result.cost);playSwooshSound(-result.cost);mistakesEl.textContent=`${mistakes}/3`;finished=false;document.querySelector('#failModal').hidden=true;saveCurrentGame();clearInterval(timerId);timerId=setInterval(tick,1000);showToast(lang==='en'?`Revived: -${result.cost} points, mistakes now ${mistakes}/3.`:`复活成功：扣 ${result.cost} 分，当前失误 ${mistakes}/3。`)});
 document.querySelector('#themeButton').addEventListener('click',()=>{document.documentElement.classList.toggle('dark');localStorage.setItem('sudoku-theme',document.documentElement.classList.contains('dark')?'dark':'light')});
@@ -422,5 +471,6 @@ document.querySelector('#expressToggle').addEventListener('change',e=>{profile.e
 function updateSoundButton(){const button=document.querySelector('#soundToggle');button.textContent=profile.soundEnabled?'♪':'×';button.classList.toggle('muted',!profile.soundEnabled);button.title=profile.soundEnabled?(lang==='en'?'Reward music on':'奖励音乐已开启'):(lang==='en'?'Reward music off':'奖励音乐已关闭');updateSoundUnlock()}
 document.querySelector('#soundUnlock').addEventListener('click',primeAudio);
 document.querySelector('#soundToggle').addEventListener('click',()=>{profile.soundEnabled=!profile.soundEnabled;if(!profile.soundEnabled)soundUnlocked=false;localStorage.setItem('sudoku-profile-v1',JSON.stringify(profile));updateSoundButton();if(profile.soundEnabled)primeAudio();else showToast(lang==='en'?'Reward music off':'奖励音乐已关闭')});updateSoundButton();
+window.sudokuAudioDebug=()=>audioDebugSnapshot();audioLog('startup');
 document.addEventListener('keydown',e=>{if(/^[1-9]$/.test(e.key))inputNumber(+e.key);else if(['Backspace','Delete','0'].includes(e.key))erase();else if(selected&&e.key.startsWith('Arrow')){e.preventDefault();const d={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];select((selected.r+d[0]+9)%9,(selected.c+d[1]+9)%9)}});
 if(localStorage.getItem('sudoku-theme')==='dark')document.documentElement.classList.add('dark');saveProfile();applyLanguage();selectDefaultLevel();if(!restoreSavedGame())newGame();
